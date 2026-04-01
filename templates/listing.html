@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}{{ item.title }} — GearShift{% endblock %}
+{% block content %}
+<div class="detail-layout">
+  <div>
+    <div class="breadcrumb">
+      <a href="{{ url_for('browse') }}">Marketplace</a> /
+      <a href="{{ url_for('browse') }}?category={{ item.category }}">{{ item.category }}</a> /
+      <span style="color:var(--dust)">{{ item.title[:40] }}</span>
+    </div>
+    <div class="detail-img">
+      <div class="detail-emoji">{% if 'Mountain' in item.category %}🏔{% elif 'Road' in item.category %}🚴{% elif 'E-Bike' in item.category %}⚡{% else %}🚲{% endif %}</div>
+      <div class="detail-badges">
+        <span class="tag tag-{% if item.condition=='Like New' %}green{% elif item.condition=='Excellent' %}blue{% elif item.condition=='Good' %}amber{% else %}grey{% endif %}">{{ item.condition }}</span>
+        {% if item.negotiable %}<span class="tag tag-orange">Price Negotiable</span>{% endif %}
+      </div>
+    </div>
+    <h1 class="detail-title">{{ item.title }}</h1>
+    <div class="detail-price-row">
+      <span class="detail-price">${{ "%.0f"|format(item.price) }}</span>
+      {% if item.negotiable %}<span class="tag tag-orange">Negotiable</span>{% endif %}
+      <span class="mono" style="font-size:.72rem;color:var(--concrete);margin-left:auto">{{ item.views }} views</span>
+    </div>
+    <div class="specs-grid">
+      {% if item.brand %}<div class="spec"><span class="spec-label">Brand</span><span class="spec-val">{{ item.brand }}</span></div>{% endif %}
+      {% if item.model %}<div class="spec"><span class="spec-label">Model</span><span class="spec-val">{{ item.model }}</span></div>{% endif %}
+      {% if item.year %}<div class="spec"><span class="spec-label">Year</span><span class="spec-val">{{ item.year }}</span></div>{% endif %}
+      <div class="spec"><span class="spec-label">Condition</span><span class="spec-val">{{ item.condition }}</span></div>
+      {% if item.frame_size and item.frame_size != '—' %}<div class="spec"><span class="spec-label">Frame</span><span class="spec-val">{{ item.frame_size }}</span></div>{% endif %}
+      {% if item.color and item.color != '—' %}<div class="spec"><span class="spec-label">Color</span><span class="spec-val">{{ item.color }}</span></div>{% endif %}
+      {% if item.mileage %}<div class="spec"><span class="spec-label">Mileage</span><span class="spec-val">{{ item.mileage }} mi</span></div>{% endif %}
+      <div class="spec"><span class="spec-label">Location</span><span class="spec-val">{{ item.location }}</span></div>
+    </div>
+    {% if item.description %}
+    <div class="detail-sec"><div class="detail-sec-title">Description</div><p>{{ item.description }}</p></div>
+    {% endif %}
+    {% if item.service_history and item.service_history != '—' %}
+    <div class="detail-sec svc-record"><div class="detail-sec-title">🔧 Service Record</div><p>{{ item.service_history }}</p></div>
+    {% endif %}
+    <div class="detail-actions">
+      {% if uid and uid != item.seller_id %}
+        <a href="{{ url_for('checkout', lid=item.id) }}" class="btn btn-primary btn-lg">Buy Now — ${{ "%.0f"|format(item.price) }}</a>
+        {% if item.negotiable %}<button onclick="document.getElementById('offerModal').style.display='flex'" class="btn btn-outline btn-lg">Make Offer</button>{% endif %}
+        <a href="{{ url_for('chat', oid=item.seller_id, lid=item.id) }}" class="btn btn-outline btn-lg">Message</a>
+        <button onclick="favToggle(this,{{ item.id }})" class="fav-detail-btn {% if fav %}on{% endif %}" id="favBtn">{% if fav %}♥ Saved{% else %}♡ Save{% endif %}</button>
+      {% elif uid == item.seller_id %}
+        <a href="{{ url_for('edit_listing', lid=item.id) }}" class="btn btn-outline btn-lg">Edit Listing</a>
+        <button onclick="if(confirm('Delete?'))fetch('/listing/{{ item.id }}/delete',{method:'POST'}).then(r=>r.json()).then(d=>{if(d.ok)window.location='{{ url_for('dashboard') }}';})" class="btn btn-danger btn-lg">Delete</button>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Sign In to Purchase</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="detail-sidebar">
+    <div class="sidebar-box">
+      <span class="sidebar-label">Seller</span>
+      <div class="seller-row">
+        <div class="seller-av">{{ item.username[0].upper() }}</div>
+        <div>
+          <a href="{{ url_for('profile', username=item.username) }}" class="seller-name">{{ item.full_name or item.username }}{% if item.is_verified %} <span class="tag tag-green" style="font-size:.58rem">✓</span>{% endif %}</a>
+          <div class="seller-rating">★ {{ "%.1f"|format(item.sr) }} ({{ item.reviews_count }} reviews)</div>
+          <div class="seller-meta">📍 {{ item.sloc }}</div>
+          <div class="seller-meta">Since {{ item.joined[:7] }}</div>
+        </div>
+      </div>
+      {% if uid and uid != item.seller_id %}
+      <a href="{{ url_for('chat', oid=item.seller_id, lid=item.id) }}" class="btn btn-outline btn-sm btn-full" style="margin-top:1rem">Message Seller</a>
+      {% endif %}
+    </div>
+    {% if others %}
+    <div class="sidebar-box">
+      <span class="sidebar-label">More from {{ item.username }}</span>
+      {% for o in others %}
+      <a href="{{ url_for('listing', lid=o.id) }}" class="more-item">
+        <span>🚲</span>
+        <span>{{ o.title[:32] }}</span>
+        <span class="more-price">${{ "%.0f"|format(o.price) }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if uid and item.negotiable and uid != item.seller_id %}
+<div class="modal-bg" id="offerModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><h3>Make an Offer</h3><button onclick="document.getElementById('offerModal').style.display='none'">✕</button></div>
+    <div class="modal-body">
+      <p>Listed at <strong style="color:var(--orange)">${{ "%.0f"|format(item.price) }}</strong></p>
+      <div class="field"><label>Your Offer ($)</label><input type="number" id="oAmt" class="input" value="{{ (item.price*0.9)|int }}"></div>
+      <div class="field"><label>Message (optional)</label><textarea id="oMsg" class="input" rows="3" placeholder="Introduce yourself..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button onclick="submitOffer({{ item.id }})" class="btn btn-primary">Send Offer</button>
+      <button onclick="document.getElementById('offerModal').style.display='none'" class="btn btn-outline">Cancel</button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function submitOffer(lid) {
+  const amt = document.getElementById('oAmt').value;
+  const msg = document.getElementById('oMsg').value;
+  if (!amt || amt <= 0) { showToast('Enter a valid amount', 'error'); return; }
+  fetch('/offer/make', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({listing_id:lid, amount:parseFloat(amt), message:msg}) })
+  .then(r => r.json()).then(d => {
+    document.getElementById('offerModal').style.display = 'none';
+    showToast(d.ok ? 'Offer sent!' : d.error, d.ok ? 'success' : 'error');
+  });
+}
+function favToggle(btn, lid) {
+  fetch('/fav/toggle', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({lid}) })
+  .then(r => r.json()).then(d => {
+    if (d.error) { window.location = '/login'; return; }
+    btn.textContent = d.state === 'added' ? '♥ Saved' : '♡ Save';
+    btn.classList.toggle('on', d.state === 'added');
+  });
+}
+</script>
+{% endblock %}

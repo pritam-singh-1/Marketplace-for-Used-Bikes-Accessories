@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% block title %}Messages — GearShift{% endblock %}
+{% block content %}
+<div class="inner-page">
+  <div class="inner-title">Messages</div>
+  <div class="inner-sub">Your conversations with buyers and sellers</div>
+  {% if convos %}
+  <div class="convo-list">
+    {% for cv in convos %}
+    <a href="{{ url_for('chat', oid=cv.other.id, lid=cv.listing.id) }}" class="convo-item {% if cv.unread>0 %}convo-unread{% endif %}">
+      <div class="convo-av">{{ cv.other.username[0].upper() }}</div>
+      <div class="convo-info">
+        <div class="convo-name">{{ cv.other.username }}</div>
+        <div class="convo-listing">re: {{ cv.listing.title[:40] }}</div>
+        <div class="convo-last">{{ cv.last.content[:55] }}</div>
+      </div>
+      <div class="convo-time">{{ cv.last.created_at[:16] }}</div>
+      {% if cv.unread>0 %}<span class="tag tag-orange">{{ cv.unread }}</span>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><div class="empty-label">No Messages Yet</div><div class="empty-sub">Contact sellers from any listing page</div><a href="{{ url_for('browse') }}" class="btn btn-primary">Browse Listings</a></div>
+  {% endif %}
+</div>
+{% endblock %}
