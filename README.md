@@ -2,7 +2,7 @@
 
 A web application where users can list, browse, and buy/sell used bikes and accessories.
 
-## Repository structure
+## Repository Structure
 
 ```text
 .
@@ -12,3 +12,5 @@ A web application where users can list, browse, and buy/sell used bikes and acce
 ├── LICENSE
 └── README.md
 ```
+
+`docs/architecture/er-diagram.png` was relocated from `ER-diagram/ER diagram .png`.
