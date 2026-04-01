@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}GearShift — Used Bikes Marketplace{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+{% block head %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="{{ url_for('index') }}" class="nav-logo">
+      <span class="logo-icon">⚙</span>
+      <span class="logo-text">GearShift</span>
+    </a>
+    <div class="nav-links">
+      <a href="{{ url_for('browse') }}" class="nav-link">Marketplace</a>
+      <a href="{{ url_for('service') }}" class="nav-link">Service</a>
+      {% if uid %}
+      <a href="{{ url_for('messages') }}" class="nav-link nav-badge-wrap">
+        Messages {% if unread > 0 %}<span class="nav-badge">{{ unread }}</span>{% endif %}
+      </a>
+      <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+      {% endif %}
+    </div>
+    <div class="nav-right">
+      {% if uid %}
+        <span class="nav-user">{{ uname }}</span>
+        <a href="{{ url_for('new_listing') }}" class="btn btn-primary btn-sm" style="margin:0 .5rem">+ Sell</a>
+        <a href="{{ url_for('logout') }}" class="nav-link">Out</a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="nav-link">Sign In</a>
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm" style="margin-left:.5rem">Join</a>
+      {% endif %}
+    </div>
+    <button class="nav-burger" onclick="toggleNav()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="nav-mobile" id="navMobile">
+    <a href="{{ url_for('browse') }}">Marketplace</a>
+    <a href="{{ url_for('service') }}">Service</a>
+    {% if uid %}
+    <a href="{{ url_for('messages') }}">Messages{% if unread > 0 %} ({{ unread }}){% endif %}</a>
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('new_listing') }}">Sell a Bike</a>
+    <a href="{{ url_for('logout') }}">Sign Out</a>
+    {% else %}
+    <a href="{{ url_for('login') }}">Sign In</a>
+    <a href="{{ url_for('register') }}">Join Free</a>
+    {% endif %}
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-stack">
+  {% for cat, msg in messages %}
+  <div class="flash flash-{{ cat }}">
+    <span>{{ msg }}</span>
+    <button onclick="this.parentElement.remove()">✕</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<main>{% block content %}{% endblock %}</main>
+
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="footer-brand-name">⚙ GearShift</div>
+      <p>The no-nonsense marketplace for serious cyclists. Buy, sell, and service with confidence.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Browse</h5>
+      <a href="{{ url_for('browse') }}?category=Road Bike">Road Bikes</a>
+      <a href="{{ url_for('browse') }}?category=Mountain Bike">Mountain Bikes</a>
+      <a href="{{ url_for('browse') }}?category=E-Bike">E-Bikes</a>
+      <a href="{{ url_for('browse') }}?category=Accessories">Accessories</a>
+    </div>
+    <div class="footer-col">
+      <h5>Service</h5>
+      <a href="{{ url_for('service') }}">Book a Service</a>
+      <a href="{{ url_for('service') }}#packages">Packages</a>
+      <a href="{{ url_for('service') }}#mechanics">Mechanics</a>
+      <a href="{{ url_for('my_bookings') if uid else url_for('login') }}">My Bookings</a>
+    </div>
+    <div class="footer-col">
+      <h5>Account</h5>
+      {% if uid %}
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('new_listing') }}">Sell a Bike</a>
+      <a href="{{ url_for('messages') }}">Messages</a>
+      {% else %}
+      <a href="{{ url_for('register') }}">Create Account</a>
+      <a href="{{ url_for('login') }}">Sign In</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2024 GearShift Marketplace. Built for riders.</span>
+    <span>No fluff. Just bikes.</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

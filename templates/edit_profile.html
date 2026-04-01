@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block title %}Edit Profile — GearShift{% endblock %}
+{% block content %}
+<div class="form-page">
+  <div class="form-page-title">Edit Profile</div>
+  <div class="form-page-sub">Keep your details accurate to build trust with buyers and sellers.</div>
+  <form method="POST">
+    <div class="form-block">
+      <div class="form-block-title"><span class="form-num">01</span> Personal Details</div>
+      <div class="field-row">
+        <div class="field"><label>Full Name</label><input type="text" name="full_name" class="input" value="{{ u.full_name or '' }}" placeholder="Alex Rider"></div>
+        <div class="field"><label>Phone</label><input type="tel" name="phone" class="input" value="{{ u.phone or '' }}" placeholder="555-0100"></div>
+      </div>
+      <div class="field"><label>Location</label><input type="text" name="location" class="input" value="{{ u.location or '' }}" placeholder="Austin, TX"></div>
+      <div class="field"><label>Bio</label><textarea name="bio" class="input" rows="4" placeholder="Tell buyers about your riding background, what you sell, grading standards...">{{ u.bio or '' }}</textarea></div>
+    </div>
+    <div class="form-bar">
+      <button type="submit" class="btn btn-primary btn-lg">Save Profile</button>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

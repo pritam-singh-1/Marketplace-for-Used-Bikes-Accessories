@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% block title %}My Bookings — GearShift{% endblock %}
+{% block content %}
+<div class="inner-page" style="max-width:860px">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--steel)">
+    <div><div class="inner-title">Service Bookings</div><div class="inner-sub" style="margin:0">Your bike service history and upcoming appointments</div></div>
+    <a href="{{ url_for('service') }}" class="btn btn-primary">+ Book New Service</a>
+  </div>
+  {% if bookings %}
+  {% for b in bookings %}
+  <div class="bk-card">
+    <div class="bk-head">
+      <div><div class="bk-pkg">{{ b.package|title }} Service</div><div class="bk-bike">{{ b.bike_info }}</div></div>
+      <span class="status-badge sb-{{ b.status }}">{{ b.status|replace('_',' ')|title }}</span>
+    </div>
+    <div class="bk-details">
+      <div class="bk-d"><span class="bk-d-label">Date</span><span class="bk-d-val">{{ b.scheduled_date }}</span></div>
+      <div class="bk-d"><span class="bk-d-label">Mechanic</span><span class="bk-d-val">{{ b.mname or 'TBD' }}</span></div>
+      <div class="bk-d"><span class="bk-d-label">Cost</span><span class="bk-d-val">${{ b.cost }}</span></div>
+      <div class="bk-d"><span class="bk-d-label">Ref</span><span class="bk-d-val" style="font-family:var(--mono)">GS-SVC-{{ '%04d'%b.id }}</span></div>
+    </div>
+    {% if b.notes %}<div style="padding:.65rem 1.25rem;font-family:var(--mono);font-size:.72rem;color:var(--concrete);border-bottom:1px solid var(--carbon)">Notes: {{ b.notes }}</div>{% endif %}
+    <div class="bk-progress">
+      {% set steps = ['pending','confirmed','in_progress','quality_check','complete'] %}
+      {% set cur = steps.index(b.status) if b.status in steps else 0 %}
+      {% for s in steps %}
+      <div class="bpstep {% if loop.index0 < cur %}done{% elif loop.index0 == cur %}cur{% endif %}">
+        <div class="bpdot"></div><span>{{ s|replace('_',' ')|title }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state"><div class="empty-label">No Bookings Yet</div><div class="empty-sub">Keep your bike in peak condition</div><a href="{{ url_for('service') }}" class="btn btn-primary">Book a Service</a></div>
+  {% endif %}
+</div>
+{% endblock %}

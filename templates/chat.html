@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% block title %}Chat — GearShift{% endblock %}
+{% block content %}
+<div class="chat-wrap">
+  <div class="chat-head">
+    <a href="{{ url_for('messages') }}" class="chat-back">← Back</a>
+    <div class="chat-peer-av">{{ other.username[0].upper() }}</div>
+    <div>
+      <div class="chat-peer-name">{{ other.full_name or other.username }}</div>
+      <div class="chat-peer-ref">re: <a href="{{ url_for('listing', lid=lst.id) }}" style="color:var(--orange)">{{ lst.title }}</a></div>
+    </div>
+    <a href="{{ url_for('listing', lid=lst.id) }}" class="btn btn-outline btn-sm" style="margin-left:auto">View Listing</a>
+  </div>
+  <div class="chat-msgs" id="chatMsgs">
+    {% for m in msgs %}
+    <div class="msg {% if m.sender_id==uid %}msg-mine{% else %}msg-theirs{% endif %}">
+      <span class="msg-time">{{ m.username }} · {{ m.created_at[11:16] }}</span>
+      {{ m.content }}
+    </div>
+    {% endfor %}
+    {% if not msgs %}<div class="chat-empty-msg">Start the conversation. Ask about condition, arrange viewing, or make an offer.</div>{% endif %}
+  </div>
+  <div class="chat-bar">
+    <input type="text" id="msgIn" class="chat-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMsg()">
+    <button onclick="sendMsg()" class="btn btn-primary">Send →</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const cm = document.getElementById('chatMsgs'); cm.scrollTop = cm.scrollHeight;
+function sendMsg() {
+  const i = document.getElementById('msgIn'), txt = i.value.trim(); if (!txt) return;
+  fetch('/messages/send', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({receiver_id:{{ other.id }},listing_id:{{ lid }},content:txt}) })
+  .then(r=>r.json()).then(d => {
+    if (d.ok) { const div = document.createElement('div'); div.className='msg msg-mine'; div.innerHTML=`<span class="msg-time">You · Now</span>${d.msg.content}`; cm.appendChild(div); cm.scrollTop=cm.scrollHeight; i.value=''; }
+  });
+}
+</script>
+{% endblock %}

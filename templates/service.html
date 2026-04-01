@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Bike Servicing — GearShift{% endblock %}
+{% block content %}
+<div class="svc-hero">
+  <div class="svc-hero-inner">
+    <div>
+      <div class="hero-eyebrow">Expert Mechanics</div>
+      <div class="svc-hero-title">Bike <span>Servicing</span></div>
+      <div class="svc-hero-sub">Book certified mechanics online. Real-time status updates. Full written condition reports on every overhaul.</div>
+    </div>
+    <div>
+      <div class="svc-hero-stats">
+        <div class="svc-stat"><div class="svc-stat-n">5</div><div class="svc-stat-l">Mechanics</div></div>
+        <div class="svc-stat"><div class="svc-stat-n">500+</div><div class="svc-stat-l">Serviced</div></div>
+        <div class="svc-stat"><div class="svc-stat-n">4.8★</div><div class="svc-stat-l">Avg Rating</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="svc-page">
+  <div id="packages" style="margin-bottom:3rem">
+    <div class="section-kicker">Step 1</div>
+    <div class="section-title" style="margin-bottom:1.5rem">Choose Your Package</div>
+    <div class="pkg-grid">
+      {% for p in packages %}
+      <div class="pkg {% if p.id=='standard' %}pkg-featured{% endif %}" data-pkg="{{ p.id }}" data-price="{{ p.price }}" onclick="selectPkg(this)">
+        {% if p.id=='standard' %}<div class="pkg-pop">★ Most Popular</div>{% endif %}
+        <div class="pkg-name">{{ p.name }}</div>
+        <div class="pkg-price">${{ p.price }}</div>
+        <div class="pkg-time">⏱ {{ p.time }}</div>
+        <ul class="pkg-items">{% for item in p.checklist %}<li>{{ item }}</li>{% endfor %}</ul>
+        <div class="pkg-sel">— Select Package</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div id="mechanics" style="margin-bottom:3rem">
+    <div class="section-kicker">Step 2</div>
+    <div class="section-title" style="margin-bottom:1.5rem">Choose Your Mechanic</div>
+    <div class="mechs-grid">
+      {% for m in mechs %}
+      <div class="mech" data-mid="{{ m.id }}" data-mname="{{ m.name }}" onclick="selectMech(this)">
+        <div class="mech-av">{{ m.name[0] }}</div>
+        <div>
+          <div class="mech-name">{{ m.name }}</div>
+          <div class="mech-spec">{{ m.specialization }}</div>
+          <div class="mech-meta"><span class="tag tag-amber" style="font-size:.62rem">★ {{ m.rating }}</span><span class="mono" style="font-size:.68rem;color:var(--concrete)">{{ m.experience }} yrs</span></div>
+        </div>
+        <span class="mech-check">✓ Selected</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="book-grid" id="book">
+    <div class="book-box">
+      <h3>Book Your Service</h3>
+      <div class="sel-pills">
+        <span class="sel-pill" id="pillPkg">No package selected</span>
+        <span class="sel-pill" id="pillMech">No mechanic selected</span>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Your Bike</label><input type="text" id="bikeInfo" class="input" placeholder="2022 Trek Marlin 7 MTB, 29er"></div>
+        <div class="field"><label>Preferred Date</label><input type="date" id="bookDate" class="input"></div>
+      </div>
+      <div class="field"><label>Notes for mechanic</label><textarea id="svcNotes" class="input" rows="3" placeholder="Describe any issues — clicking noise, shifting problems, brake rub..."></textarea></div>
+      <div class="cost-box" id="costBox">
+        <div class="cost-row"><span>Package</span><span id="costBase">—</span></div>
+        <div class="cost-row"><span>Labour</span><span>Included</span></div>
+        <div class="cost-total"><span>Estimate</span><span id="costTotal">—</span></div>
+        <div class="cost-note">* Final cost may vary depending on parts required</div>
+      </div>
+      <button onclick="bookService()" class="btn btn-primary btn-lg btn-full">Confirm Booking</button>
+      <div style="margin-top:.6rem;font-family:var(--mono);font-size:.72rem;color:var(--concrete)">{% if not uid %}<a href="{{ url_for('login') }}" style="color:var(--orange)">Sign in</a> to book. {% endif %}You'll receive a reference number immediately.</div>
+    </div>
+    <div class="book-box">
+      <h3>Track a Booking</h3>
+      <div class="track-row">
+        <input type="text" id="trackId" class="input" placeholder="e.g. GS-SVC-0001">
+        <button onclick="trackBooking()" class="btn btn-outline">Track</button>
+      </div>
+      <div class="progress-steps" id="trackResult" style="display:none">
+        {% for s in ['Pending','Confirmed','In Progress','Quality Check','Complete'] %}
+        <div class="pstep" id="pstep{{ loop.index }}">
+          <div class="pstep-dot"></div><span>{{ s }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% if uid %}
+      <a href="{{ url_for('my_bookings') }}" class="btn btn-outline btn-full btn-sm" style="margin-top:1.5rem">View My Bookings →</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="svcModal" style="display:none">
+  <div class="modal">
+    <div class="modal-success">
+      <div class="success-icon">✓</div>
+      <h3>Booking Confirmed!</h3>
+      <p id="svcConfirmText"></p>
+      <a href="{{ url_for('my_bookings') if uid else url_for('login') }}" class="btn btn-primary btn-lg" style="margin-top:1rem">View My Bookings</a>
+      <button onclick="document.getElementById('svcModal').style.display='none'" class="btn btn-outline btn-sm" style="margin-top:.5rem;display:block;width:100%">Close</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let selPkg = null, selPrice = 0, selMid = null;
+const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+document.getElementById('bookDate').min = tomorrow.toISOString().split('T')[0];
+document.getElementById('bookDate').value = tomorrow.toISOString().split('T')[0];
+
+function selectPkg(el) {
+  document.querySelectorAll('.pkg').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected'); selPkg = el.dataset.pkg; selPrice = parseFloat(el.dataset.price);
+  document.getElementById('pillPkg').textContent = el.querySelector('.pkg-name').textContent + ' — $' + selPrice;
+  document.getElementById('pillPkg').classList.add('active');
+  document.getElementById('costBox').style.display = 'block';
+  document.getElementById('costBase').textContent = '$' + selPrice;
+  document.getElementById('costTotal').textContent = '$' + selPrice;
+}
+function selectMech(el) {
+  document.querySelectorAll('.mech').forEach(m => m.classList.remove('selected'));
+  el.classList.add('selected'); selMid = el.dataset.mid;
+  document.getElementById('pillMech').textContent = el.dataset.mname;
+  document.getElementById('pillMech').classList.add('active');
+}
+function bookService() {
+  if (!selPkg) { showToast('Select a service package', 'error'); return; }
+  if (!selMid) { showToast('Select a mechanic', 'error'); return; }
+  const bi = document.getElementById('bikeInfo').value;
+  if (!bi) { showToast('Describe your bike', 'error'); return; }
+  const date = document.getElementById('bookDate').value;
+  const notes = document.getElementById('svcNotes').value;
+  fetch('/service/book', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ package:selPkg, mechanic_id:selMid, bike_info:bi, date, notes }) })
+  .then(r => r.json()).then(d => {
+    if (d.ok) { document.getElementById('svcConfirmText').textContent = 'Reference: ' + d.ref + ' — ' + date; document.getElementById('svcModal').style.display = 'flex'; }
+    else showToast(d.error || 'Sign in to book', 'error');
+  });
+}
+function trackBooking() {
+  const v = document.getElementById('trackId').value.trim().replace('GS-SVC-','').replace(/^0+/,'');
+  if (!v) { showToast('Enter a booking ID', 'error'); return; }
+  fetch(`/service/status/${v}`).then(r=>r.json()).then(d => {
+    if (d.error) { showToast('Not found', 'error'); return; }
+    document.getElementById('trackResult').style.display = 'flex';
+    document.getElementById('trackResult').style.flexDirection = 'column';
+    for (let i = 1; i <= 5; i++) {
+      const s = document.getElementById('pstep'+i);
+      s.classList.remove('done','current');
+      if (i < d.step) s.classList.add('done');
+      if (i === d.step) s.classList.add('current');
+    }
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Marketplace — GearShift{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="page-banner-inner">
+    <h1>Marketplace — <span style="color:var(--orange)">{{ listings|length }} listings</span></h1>
+    <form action="{{ url_for('browse') }}" method="GET" style="display:flex;gap:.4rem;flex-wrap:wrap">
+      <input type="text" name="q" value="{{ q }}" class="input" placeholder="Search bikes, brands..." style="width:220px">
+      <button type="submit" class="btn btn-primary btn-sm">Search</button>
+    </form>
+  </div>
+</div>
+<div class="browse-layout">
+  <aside class="filter-col">
+    <div class="filter-title">
+      Filters
+      <button class="filter-clear" onclick="window.location='{{ url_for('browse') }}'">Clear all</button>
+    </div>
+    <form id="ff" action="{{ url_for('browse') }}" method="GET">
+      {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+      <div class="filter-group">
+        <span class="filter-group-label">Category</span>
+        {% for cat in ['Road Bike','Mountain Bike','Hybrid','E-Bike','BMX','Gravel','Kids','Accessories'] %}
+        <label class="filter-radio"><input type="radio" name="category" value="{{ cat }}" {% if category==cat %}checked{% endif %} onchange="document.getElementById('ff').submit()"><span>{{ cat }}</span></label>
+        {% endfor %}
+      </div>
+      <div class="filter-group">
+        <span class="filter-group-label">Condition</span>
+        {% for cond in ['Like New','Excellent','Good','Fair'] %}
+        <label class="filter-radio"><input type="radio" name="condition" value="{{ cond }}" {% if condition==cond %}checked{% endif %} onchange="document.getElementById('ff').submit()"><span>{{ cond }}</span></label>
+        {% endfor %}
+      </div>
+      <div class="filter-group">
+        <span class="filter-group-label">Price</span>
+        <div class="filter-price">
+          <input type="number" name="min_price" placeholder="Min" value="{{ request.args.get('min_price','') }}" class="input" style="width:80px">
+          <span>—</span>
+          <input type="number" name="max_price" placeholder="Max" value="{{ request.args.get('max_price','') }}" class="input" style="width:80px">
+        </div>
+        <button type="submit" class="btn btn-outline btn-sm btn-full" style="margin-top:.6rem">Apply</button>
+      </div>
+    </form>
+  </aside>
+  <div class="browse-main">
+    <div class="browse-bar">
+      <div class="browse-count"><strong>{{ listings|length }}</strong> results{% if category %} — {{ category }}{% endif %}</div>
+      <select class="sort-select" onchange="(function(v){var u=new URL(window.location);u.searchParams.set('sort',v);window.location=u;})(this.value)">
+        <option value="newest" {% if sort=='newest' %}selected{% endif %}>Newest First</option>
+        <option value="price_low" {% if sort=='price_low' %}selected{% endif %}>Price ↑</option>
+        <option value="price_high" {% if sort=='price_high' %}selected{% endif %}>Price ↓</option>
+        <option value="popular" {% if sort=='popular' %}selected{% endif %}>Most Viewed</option>
+      </select>
+    </div>
+    {% if listings %}
+    <div class="grid">
+      {% for item in listings %}
+      <div class="card" onclick="location.href='{{ url_for('listing', lid=item.id) }}'">
+        <div class="card-img">
+          <div class="card-emoji">{% if 'Mountain' in item.category %}🏔{% elif 'Road' in item.category %}🚴{% elif 'E-Bike' in item.category %}⚡{% else %}🚲{% endif %}</div>
+          <div class="card-badges">
+            <span class="tag tag-{% if item.condition=='Like New' %}green{% elif item.condition=='Excellent' %}blue{% elif item.condition=='Good' %}amber{% else %}grey{% endif %}">{{ item.condition }}</span>
+            {% if item.negotiable %}<span class="tag tag-orange">Neg.</span>{% endif %}
+          </div>
+          <button class="card-fav" onclick="event.stopPropagation();favToggle(this,{{ item.id }})">♡</button>
+        </div>
+        <div class="card-body">
+          <div class="card-cat">{{ item.category }}</div>
+          <div class="card-title">{{ item.title }}</div>
+          <div class="card-meta">{% if item.year %}<span>{{ item.year }}</span>{% endif %}{% if item.mileage %}<span>{{ item.mileage }}mi</span>{% endif %}<span>{{ item.location }}</span></div>
+          <div class="card-foot"><span class="card-price">${{ "%.0f"|format(item.price) }}</span><div class="card-seller"><span class="seller-init">{{ item.username[0].upper() }}</span>{{ item.username }}</div></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><div class="empty-label">No listings found</div><div class="empty-sub">Try different filters</div><a href="{{ url_for('browse') }}" class="btn btn-outline">Clear Filters</a></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

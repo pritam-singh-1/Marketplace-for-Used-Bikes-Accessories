@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% block title %}{{ u.username }} — GearShift{% endblock %}
+{% block content %}
+<div class="profile-page">
+  <div class="profile-header">
+    <div class="profile-av">{{ u.username[0].upper() }}</div>
+    <div class="profile-info">
+      <div class="profile-name">{{ u.full_name or u.username }}{% if u.is_verified %}&nbsp;<span class="tag tag-green">✓ Verified</span>{% endif %}</div>
+      <div class="profile-meta"><span>@{{ u.username }}</span>{% if u.location %}<span>📍 {{ u.location }}</span>{% endif %}<span>Since {{ u.joined[:7] }}</span></div>
+      {% if u.rating > 0 %}<div class="profile-rating">★ {{ "%.1f"|format(u.rating) }} · {{ u.reviews_count }} reviews</div>{% endif %}
+      {% if u.bio %}<div class="profile-bio">{{ u.bio }}</div>{% endif %}
+    </div>
+    {% if uid == u.id %}<a href="{{ url_for('edit_profile') }}" class="btn btn-outline btn-sm">Edit Profile</a>{% endif %}
+  </div>
+  <div class="section-title" style="font-size:1.4rem;margin-bottom:1.25rem">Listings ({{ listings|length }})</div>
+  {% if listings %}
+  <div class="grid">
+    {% for l in listings %}
+    <div class="card" onclick="location.href='{{ url_for('listing', lid=l.id) }}'">
+      <div class="card-img"><div class="card-emoji">🚲</div><div class="card-badges"><span class="tag tag-{% if l.condition=='Like New' %}green{% elif l.condition=='Excellent' %}blue{% elif l.condition=='Good' %}amber{% else %}grey{% endif %}">{{ l.condition }}</span></div></div>
+      <div class="card-body"><div class="card-cat">{{ l.category }}</div><div class="card-title">{{ l.title }}</div><div class="card-foot"><span class="card-price">${{ "%.0f"|format(l.price) }}</span></div></div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}<div class="empty-panel">No active listings.</div>{% endif %}
+  {% if reviews %}
+  <div style="margin-top:3rem"><div class="section-title" style="font-size:1.4rem;margin-bottom:1.25rem">Reviews</div>
+  {% for r in reviews %}
+  <div class="review-item">
+    <div class="review-head"><span class="review-stars">{% for i in range(r.rating) %}★{% endfor %}</span><span class="review-who">{{ r.username }}</span><span class="review-date">{{ r.created_at[:10] }}</span></div>
+    <div class="review-text">{{ r.comment }}</div>
+  </div>
+  {% endfor %}
+  </div>{% endif %}
+</div>
+{% endblock %}

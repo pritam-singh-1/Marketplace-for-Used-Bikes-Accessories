@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section class="hero">
+  <div class="hero-stripes"></div>
+  <div class="hero-cross"></div>
+  <div class="hero-inner">
+    <div class="hero-eyebrow">The Cyclist's Marketplace</div>
+    <h1 class="hero-title">
+      Real Bikes.
+      <span>Real Deals.</span>
+    </h1>
+    <p class="hero-sub">Buy and sell used bikes & gear from verified riders. No middlemen, no markup — just honest transactions between people who ride.</p>
+    <div class="hero-actions">
+      <a href="{{ url_for('browse') }}" class="btn btn-primary btn-xl">Browse Listings →</a>
+      <a href="{{ url_for('service') }}" class="btn btn-outline btn-xl">Book a Service</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-n">{{ stats.listings }}+</div><div class="hstat-l">Active Listings</div></div>
+      <div class="hstat"><div class="hstat-n">{{ stats.users }}+</div><div class="hstat-l">Verified Riders</div></div>
+      <div class="hstat"><div class="hstat-n">{{ stats.sold }}+</div><div class="hstat-l">Bikes Sold</div></div>
+    </div>
+    <div class="hero-cats">
+      {% for cat, emoji in [('Road Bike','🚴'),('Mountain Bike','🏔'),('E-Bike','⚡'),('Hybrid','🚲'),('BMX','🤸'),('Accessories','🔧')] %}
+      <a href="{{ url_for('browse') }}?category={{ cat }}" class="hero-cat">{{ cat }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<div class="features-strip">
+  <div class="features-inner">
+    <div class="feat">
+      <div class="feat-num">01</div>
+      <h3>Verified Sellers</h3>
+      <p>Every seller is rated and reviewed by real buyers. Full transaction history, no anonymous listings.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-num">02</div>
+      <h3>Negotiated Prices</h3>
+      <p>Make offers, counter-offer, message sellers directly. Every listing shows whether price is flexible.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-num">03</div>
+      <h3>Expert Servicing</h3>
+      <p>Book certified mechanics. Real-time status updates. Full condition report on every overhaul.</p>
+    </div>
+  </div>
+</div>
+
+<section class="section" style="background:var(--black)">
+  <div class="section-wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Fresh Drops</div>
+        <div class="section-title">Latest Listings</div>
+      </div>
+      <a href="{{ url_for('browse') }}" class="btn btn-outline btn-sm">View All →</a>
+    </div>
+    {% if featured %}
+    <div class="grid">
+      {% for item in featured %}
+      <div class="card" onclick="location.href='{{ url_for('listing', lid=item.id) }}'">
+        <div class="card-img">
+          <div class="card-emoji">{% if 'Mountain' in item.category %}🏔{% elif 'Road' in item.category %}🚴{% elif 'E-Bike' in item.category %}⚡{% else %}🚲{% endif %}</div>
+          <div class="card-badges">
+            <span class="tag tag-{% if item.condition=='Like New' %}green{% elif item.condition=='Excellent' %}blue{% elif item.condition=='Good' %}amber{% else %}grey{% endif %}">{{ item.condition }}</span>
+            {% if item.negotiable %}<span class="tag tag-orange">Neg.</span>{% endif %}
+          </div>
+          {% if item.is_verified %}<div class="card-verified"><span class="tag tag-green">✓ Verified</span></div>{% endif %}
+          <button class="card-fav" onclick="event.stopPropagation();favToggle(this,{{ item.id }})">♡</button>
+        </div>
+        <div class="card-body">
+          <div class="card-cat">{{ item.category }}</div>
+          <div class="card-title">{{ item.title }}</div>
+          <div class="card-meta">
+            {% if item.year %}<span>{{ item.year }}</span>{% endif %}
+            {% if item.mileage %}<span>{{ item.mileage }}mi</span>{% endif %}
+            <span>{{ item.location }}</span>
+          </div>
+          <div class="card-foot">
+            <span class="card-price">${{ "%.0f"|format(item.price) }}</span>
+            <div class="card-seller">
+              <span class="seller-init">{{ item.username[0].upper() }}</span>
+              {{ item.username }}
+              <span style="color:var(--amber)">★{{ "%.1f"|format(item.sr) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<div class="cta-strip">
+  <div class="cta-inner">
+    <div>
+      <div class="cta-title">Got a bike collecting dust?</div>
+      <div class="cta-sub">List in 2 minutes. Reach thousands of verified buyers. Get paid.</div>
+    </div>
+    <a href="{{ url_for('new_listing') if uid else url_for('register') }}" class="btn-cta">Start Selling Free →</a>
+  </div>
+</div>
+
+{% endblock %}

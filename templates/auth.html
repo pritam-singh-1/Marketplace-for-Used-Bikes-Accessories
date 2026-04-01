@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{% if mode=='login' %}Sign In{% else %}Join GearShift{% endif %}{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-panel">
+    <div class="auth-panel-stripes"></div>
+    <div>
+      <div class="auth-panel-title">Gear<span>Shift</span></div>
+      <ul class="auth-panel-list">
+        <li>Verified sellers and buyer protection</li>
+        <li>Direct price negotiation</li>
+        <li>Secure escrow payments</li>
+        <li>Professional bike servicing</li>
+        <li>Full service history on every listing</li>
+      </ul>
+    </div>
+  </div>
+  <div class="auth-form-side">
+    <div class="auth-box">
+      <div class="auth-tabs">
+        <a href="{{ url_for('login') }}" class="auth-tab {% if mode=='login' %}active{% endif %}">Sign In</a>
+        <a href="{{ url_for('register') }}" class="auth-tab {% if mode=='register' %}active{% endif %}">Join Free</a>
+      </div>
+      {% if mode == 'login' %}
+      <form method="POST" action="{{ url_for('login') }}">
+        <div class="field"><label>Email or Username</label><input type="text" name="login" required class="input" placeholder="your@email.com"></div>
+        <div class="field"><label>Password</label><input type="password" name="password" required class="input" placeholder="••••••••"></div>
+        <button type="submit" class="btn btn-primary btn-full btn-lg">Sign In →</button>
+        <div class="auth-switch">No account? <a href="{{ url_for('register') }}">Join free</a></div>
+        <div class="demo-row">
+          <div class="demo-label">Try demo accounts</div>
+          <button type="button" onclick="document.querySelector('[name=login]').value='rex@demo.com';document.querySelector('[name=password]').value='demo123'" class="btn-demo">Demo 1</button>
+          <button type="button" onclick="document.querySelector('[name=login]').value='vera@demo.com';document.querySelector('[name=password]').value='demo123'" class="btn-demo">Demo 2</button>
+          <button type="button" onclick="document.querySelector('[name=login]').value='joe@demo.com';document.querySelector('[name=password]').value='demo123'" class="btn-demo">Demo 3</button>
+        </div>
+      </form>
+      {% else %}
+      <form method="POST" action="{{ url_for('register') }}">
+        <div class="field-row">
+          <div class="field"><label>Full Name</label><input type="text" name="full_name" required class="input" placeholder="Alex Rider"></div>
+          <div class="field"><label>Username</label><input type="text" name="username" required class="input" placeholder="alexrides"></div>
+        </div>
+        <div class="field"><label>Email</label><input type="email" name="email" required class="input" placeholder="alex@email.com"></div>
+        <div class="field-row">
+          <div class="field"><label>Password</label><input type="password" name="password" required class="input" placeholder="Min 6 chars" minlength="6"></div>
+          <div class="field"><label>Phone</label><input type="tel" name="phone" class="input" placeholder="555-0100"></div>
+        </div>
+        <div class="field"><label>Location</label><input type="text" name="location" class="input" placeholder="Austin, TX"></div>
+        <button type="submit" class="btn btn-primary btn-full btn-lg">Create Account →</button>
+        <div class="auth-switch">Have an account? <a href="{{ url_for('login') }}">Sign in</a></div>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

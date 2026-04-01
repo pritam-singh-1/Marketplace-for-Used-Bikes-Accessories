@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — GearShift{% endblock %}
+{% block content %}
+<div class="dash-page">
+  <div class="dash-top">
+    <div class="dash-user">
+      <div class="dash-av">{{ u.username[0].upper() }}</div>
+      <div>
+        <div class="dash-name">{{ u.full_name or u.username }}</div>
+        <div class="dash-sub">📍 {{ u.location or 'No location' }} · Member since {{ u.joined[:7] }}</div>
+      </div>
+    </div>
+    <div class="dash-acts">
+      <a href="{{ url_for('new_listing') }}" class="btn btn-primary">+ New Listing</a>
+      <a href="{{ url_for('edit_profile') }}" class="btn btn-outline btn-sm">Edit Profile</a>
+    </div>
+  </div>
+
+  <div class="dash-stats-row">
+    <div class="dstat"><div class="dstat-n">{{ my_listings|length }}</div><div class="dstat-l">Listings</div></div>
+    <div class="dstat"><div class="dstat-n">{{ offers_in|length }}</div><div class="dstat-l">New Offers</div></div>
+    <div class="dstat"><div class="dstat-n">{{ purchases|length }}</div><div class="dstat-l">Purchases</div></div>
+    <div class="dstat"><div class="dstat-n">{{ unread }}</div><div class="dstat-l">Unread Msgs</div></div>
+    <div class="dstat"><div class="dstat-n">{{ favs|length }}</div><div class="dstat-l">Saved</div></div>
+  </div>
+
+  <div class="dash-grid">
+    <!-- MY LISTINGS -->
+    <div class="dash-panel dash-panel-full">
+      <div class="panel-head"><span class="panel-title">My Listings</span><a href="{{ url_for('new_listing') }}" class="panel-link">+ Add New</a></div>
+      {% if my_listings %}
+      {% for l in my_listings %}
+      <div class="listing-row">
+        <span class="lr-title"><a href="{{ url_for('listing', lid=l.id) }}">{{ l.title }}</a></span>
+        <span class="lr-price">${{ "%.0f"|format(l.price) }}</span>
+        <span class="lr-status {% if l.status=='active' %}status-active{% else %}status-sold{% endif %}">{{ l.status }}</span>
+        <span class="lr-views">👁 {{ l.views }}</span>
+        <span class="lr-acts"><a href="{{ url_for('edit_listing', lid=l.id) }}" class="btn-xs btn-xs-edit">Edit</a><button onclick="if(confirm('Delete?'))fetch('/listing/{{ l.id }}/delete',{method:'POST'}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();})" class="btn-xs btn-xs-stop">Del</button></span>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="empty-panel">No listings yet. <a href="{{ url_for('new_listing') }}" style="color:var(--orange)">Create your first →</a></div>
+      {% endif %}
+    </div>
+
+    <!-- OFFERS RECEIVED -->
+    <div class="dash-panel">
+      <div class="panel-head"><span class="panel-title">Offers Received</span></div>
+      {% if offers_in %}
+      {% for o in offers_in %}
+      <div class="offer-row">
+        <div class="offer-who">{{ o.bname }}</div>
+        <div class="offer-item">{{ o.ltitle[:32] }}</div>
+        <div><span class="offer-amount">${{ "%.0f"|format(o.amount) }}</span> <span class="offer-orig">(listed ${{ "%.0f"|format(o.lprice) }})</span></div>
+        {% if o.message %}<div class="offer-msg">"{{ o.message[:60] }}"</div>{% endif %}
+        <div class="offer-acts">
+          <button onclick="respondOffer({{ o.id }},'accepted')" class="btn-xs btn-xs-go">Accept</button>
+          <button onclick="respondOffer({{ o.id }},'declined')" class="btn-xs btn-xs-stop">Decline</button>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}<div class="empty-panel">No pending offers.</div>{% endif %}
+    </div>
+
+    <!-- MY OFFERS -->
+    <div class="dash-panel">
+      <div class="panel-head"><span class="panel-title">My Offers</span></div>
+      {% if offers_out %}
+      {% for o in offers_out %}
+      <div class="offer-row">
+        <div class="offer-item">{{ o.ltitle[:32] }}</div>
+        <span class="offer-amount">${{ "%.0f"|format(o.amount) }}</span>
+        <span class="status-badge sb-{{ o.status }}">{{ o.status }}</span>
+      </div>
+      {% endfor %}
+      {% else %}<div class="empty-panel">No offers sent.</div>{% endif %}
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="dash-panel">
+      <div class="panel-head"><span class="panel-title">Messages {% if unread>0 %}<span class="tag tag-orange">{{ unread }}</span>{% endif %}</span><a href="{{ url_for('messages') }}" class="panel-link">Open Inbox →</a></div>
+      <div class="empty-panel"><a href="{{ url_for('messages') }}" class="btn btn-outline btn-sm">Go to Inbox</a></div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div class="dash-panel">
+      <div class="panel-head"><span class="panel-title">Service Bookings</span><a href="{{ url_for('service') }}" class="panel-link">+ Book</a></div>
+      {% if bookings %}
+      {% for b in bookings %}
+      <div class="book-row">
+        <div><div class="book-pkg">{{ b.package }}</div><div class="book-meta">{{ b.bike_info[:24] }} — {{ b.scheduled_date }}{% if b.mname %} w/ {{ b.mname }}{% endif %}</div></div>
+        <span class="status-badge sb-{{ b.status }}">{{ b.status|replace('_',' ') }}</span>
+      </div>
+      {% endfor %}
+      {% else %}<div class="empty-panel">No bookings. <a href="{{ url_for('service') }}" style="color:var(--orange)">Book a service →</a></div>{% endif %}
+    </div>
+
+    <!-- SAVED -->
+    <div class="dash-panel">
+      <div class="panel-head"><span class="panel-title">Saved Listings</span></div>
+      {% if favs %}
+      {% for f in favs %}
+      <a href="{{ url_for('listing', lid=f.id) }}" class="mini-listing">
+        <span>🚲</span><span class="mini-title">{{ f.title[:28] }}</span><span class="mini-price">${{ "%.0f"|format(f.price) }}</span>
+      </a>
+      {% endfor %}
+      {% else %}<div class="empty-panel">Nothing saved yet.</div>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function respondOffer(oid, status) {
+  fetch(`/offer/${oid}/respond`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status}) })
+  .then(r=>r.json()).then(d => { if (d.ok) { showToast('Offer ' + status, 'success'); location.reload(); } });
+}
+</script>
+{% endblock %}

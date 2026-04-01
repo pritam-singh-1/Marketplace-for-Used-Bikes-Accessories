@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{% if listing %}Edit Listing{% else %}Sell Your Bike{% endif %} — GearShift{% endblock %}
+{% block content %}
+<div class="form-page">
+  <div class="form-page-title">{% if listing %}Edit Listing{% else %}List Your Bike or Gear{% endif %}</div>
+  <div class="form-page-sub">{% if not listing %}Fill in the details below. The more accurate you are, the faster you'll sell.{% else %}Update your listing details.{% endif %}</div>
+  <form method="POST" enctype="multipart/form-data">
+    <div class="form-block">
+      <div class="form-block-title"><span class="form-num">01</span> Basic Info</div>
+      <div class="field"><label>Title *</label><input type="text" name="title" required class="input" value="{{ listing.title if listing }}" placeholder="e.g. Trek Domane SL 6 Road Bike 2022"></div>
+      <div class="field-row">
+        <div class="field"><label>Category *</label><select name="category" required class="input">{% for c in ['Road Bike','Mountain Bike','Hybrid','E-Bike','BMX','Gravel','Kids','Accessories'] %}<option value="{{ c }}" {% if listing and listing.category==c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></div>
+        <div class="field"><label>Condition *</label><select name="condition" required class="input">{% for c in ['Like New','Excellent','Good','Fair'] %}<option value="{{ c }}" {% if listing and listing.condition==c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></div>
+      </div>
+    </div>
+    <div class="form-block">
+      <div class="form-block-title"><span class="form-num">02</span> Bike Details</div>
+      <div class="field-row">
+        <div class="field"><label>Brand</label><input type="text" name="brand" class="input" value="{{ listing.brand if listing }}" placeholder="Trek, Specialized, Giant..."></div>
+        <div class="field"><label>Model</label><input type="text" name="model" class="input" value="{{ listing.model if listing }}" placeholder="Domane SL 6"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Year</label><input type="number" name="year" class="input" value="{{ listing.year if listing }}" min="1980" max="2025" placeholder="2022"></div>
+        <div class="field"><label>Frame Size</label><input type="text" name="frame_size" class="input" value="{{ listing.frame_size if listing }}" placeholder="54cm, Medium, L..."></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Color</label><input type="text" name="color" class="input" value="{{ listing.color if listing }}" placeholder="Matte Black"></div>
+        <div class="field"><label>Mileage (approx)</label><input type="number" name="mileage" class="input" value="{{ listing.mileage if listing }}" placeholder="600"></div>
+      </div>
+    </div>
+    <div class="form-block">
+      <div class="form-block-title"><span class="form-num">03</span> Pricing & Location</div>
+      <div class="field-row">
+        <div class="field"><label>Asking Price ($) *</label><input type="number" name="price" required class="input" value="{{ listing.price if listing }}" step="0.01" placeholder="2500"></div>
+        <div class="field" style="justify-content:flex-end"><label class="check-label" style="height:100%;align-items:center"><input type="checkbox" name="negotiable" value="1" {% if not listing or listing.negotiable %}checked{% endif %}><span>Price is negotiable</span></label></div>
+      </div>
+      <div class="field"><label>Location *</label><input type="text" name="location" required class="input" value="{{ listing.location if listing }}" placeholder="Austin, TX"></div>
+    </div>
+    <div class="form-block">
+      <div class="form-block-title"><span class="form-num">04</span> Description & Service History</div>
+      <div class="field"><label>Description *</label><textarea name="description" required class="input" rows="5" placeholder="Describe condition in detail, what's included, any upgrades or wear...">{{ listing.description if listing }}</textarea></div>
+      <div class="field"><label>Service History</label><textarea name="service_history" class="input" rows="3" placeholder="Recent services, what was replaced, last tune-up date...">{{ listing.service_history if listing }}</textarea></div>
+    </div>
+    {% if not listing %}
+    <div class="form-block">
+      <div class="form-block-title"><span class="form-num">05</span> Photos</div>
+      <div class="upload-zone" onclick="document.getElementById('imgs').click()">
+        <div class="uz-label">📷 Upload Photos</div>
+        <div class="uz-sub">Click to select · JPG, PNG, WEBP · Max 16MB · Up to 8 photos</div>
+        <input type="file" name="images" id="imgs" multiple accept="image/*" style="display:none" onchange="previewImgs(this)">
+      </div>
+      <div class="img-preview" id="prevGrid"></div>
+    </div>
+    {% endif %}
+    <div class="form-bar">
+      <button type="submit" class="btn btn-primary btn-lg">{% if listing %}Save Changes{% else %}Publish Listing →{% endif %}</button>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function previewImgs(i) {
+  const g = document.getElementById('prevGrid'); g.innerHTML = '';
+  Array.from(i.files).forEach(f => {
+    const r = new FileReader();
+    r.onload = e => {
+      const d = document.createElement('div'); d.className = 'prev-img';
+      d.innerHTML = `<img src="${e.target.result}"><button type="button" onclick="this.parentElement.remove()">✕</button>`;
+      g.appendChild(d);
+    };
+    r.readAsDataURL(f);
+  });
+}
+</script>
+{% endblock %}

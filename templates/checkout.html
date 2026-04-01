@@ -1,0 +1,72 @@
+{% extends "base.html" %}{% block title %}Checkout — GearShift{% endblock %}
+{% block content %}
+<div class="checkout-page">
+  <div class="checkout-grid">
+    <div class="checkout-form">
+      <h1>Secure Checkout</h1>
+      <div class="order-box">
+        <div class="order-row"><span>{{ item.title }}</span><span style="color:var(--orange);font-family:var(--display);font-weight:900">${{ "%.2f"|format(item.price) }}</span></div>
+        <div class="order-row" style="font-size:.82rem;color:var(--concrete)"><span>Platform fee (3%)</span><span>${{ "%.2f"|format(item.price*0.03) }}</span></div>
+        <div class="order-total"><span>Total</span><span>${{ "%.2f"|format(item.price*1.03) }}</span></div>
+      </div>
+      <div class="pay-title">Payment Method</div>
+      <div class="pay-tabs">
+        <button class="pay-tab active" onclick="setMethod(this,'card')">💳 Card</button>
+        <button class="pay-tab" onclick="setMethod(this,'paypal')">🅿 PayPal</button>
+        <button class="pay-tab" onclick="setMethod(this,'bank')">🏦 Bank Transfer</button>
+      </div>
+      <div class="pay-card-form">
+        <div class="field"><label>Cardholder Name</label><input type="text" id="cName" class="input" placeholder="Alex Rider"></div>
+        <div class="field"><label>Card Number</label><input type="text" id="cNum" class="input" placeholder="4242 4242 4242 4242" maxlength="19" oninput="this.value=this.value.replace(/\D/g,'').replace(/(.{4})/g,'$1 ').trim()"></div>
+        <div class="field-row">
+          <div class="field"><label>Expiry</label><input type="text" id="cExp" class="input" placeholder="MM/YY" maxlength="5"></div>
+          <div class="field"><label>CVV</label><input type="text" id="cCvv" class="input" placeholder="123" maxlength="4"></div>
+        </div>
+      </div>
+      <div class="secure-note"><span>🔒 256-bit SSL</span><span>🛡 Buyer Protection</span><span>↩ Dispute Support</span></div>
+      <button onclick="pay()" class="btn btn-primary btn-lg btn-full">Pay ${{ "%.2f"|format(item.price*1.03) }} →</button>
+    </div>
+    <div class="checkout-side">
+      <div class="side-box">
+        <h4>Seller</h4>
+        <div style="display:flex;gap:.75rem;align-items:center">
+          <div style="width:36px;height:36px;background:var(--orange);color:var(--black);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900">{{ item.username[0].upper() }}</div>
+          <div><div style="font-family:var(--display);font-weight:700;color:var(--white);font-size:.9rem;text-transform:uppercase">{{ item.full_name or item.username }}</div><div style="font-family:var(--mono);font-size:.7rem;color:var(--concrete)">Verified Seller</div></div>
+        </div>
+      </div>
+      <div class="side-box">
+        <h4>🛡 Buyer Protection</h4>
+        <ul class="protect-list">
+          <li>Funds held in escrow</li><li>Released on confirmation</li>
+          <li>Full dispute resolution</li><li>100% satisfaction guarantee</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="payModal" style="display:none">
+  <div class="modal">
+    <div class="modal-success">
+      <div class="success-icon">✓</div>
+      <h3>Payment Complete!</h3>
+      <p id="payTx" style="margin-top:.5rem"></p>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg" style="margin-top:1.25rem">Go to Dashboard</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let payMethod = 'card';
+function setMethod(btn,m) { document.querySelectorAll('.pay-tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); payMethod=m; }
+function pay() {
+  const btn = document.querySelector('.btn-full'); btn.textContent = 'Processing...'; btn.disabled = true;
+  setTimeout(() => {
+    fetch('/payment/process', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({listing_id:{{ item.id }},seller_id:{{ item.seller_id }},amount:{{ item.price*1.03 }},method:payMethod}) })
+    .then(r=>r.json()).then(d => { if(d.ok) { document.getElementById('payTx').textContent = 'Transaction: ' + d.tx; document.getElementById('payModal').style.display='flex'; } });
+  }, 1500);
+}
+</script>
+{% endblock %}
