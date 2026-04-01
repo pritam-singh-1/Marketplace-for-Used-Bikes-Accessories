@@ -2,6 +2,18 @@ from flask import jsonify, redirect, render_template, request, session, url_for
 
 from ..database import db
 
+SERVICE_PACKAGES = [
+    {'id': 'tune', 'name': 'Quick Tune', 'price': 59, 'time': '2–3 hrs',
+     'checklist': ['Safety check', 'Brake adjustment', 'Gear indexing', 'Tyre pressure', 'Chain lube']},
+    {'id': 'standard', 'name': 'Full Service', 'price': 99, 'time': '4–5 hrs',
+     'checklist': ['All in Quick Tune', 'Wheel truing', 'Cable replacement', 'BB check', 'Full clean', 'Bearing inspection']},
+    {'id': 'overhaul', 'name': 'Premium Overhaul', 'price': 169, 'time': '6–8 hrs',
+     'checklist': ['All in Full Service', 'Complete drivetrain strip', 'Headset service', 'Hub service', 'Hydraulic bleed', 'Written condition report']},
+    {'id': 'ebike', 'name': 'E-Bike Specialist', 'price': 149, 'time': '5–6 hrs',
+     'checklist': ['Battery health test', 'Motor diagnostic', 'Firmware update', 'Sensor calibration', 'Full Service items']},
+]
+SERVICE_PRICES = {p['id']: p['price'] for p in SERVICE_PACKAGES}
+
 
 def register_service_routes(app):
     @app.route('/service')
@@ -9,27 +21,24 @@ def register_service_routes(app):
         c = db()
         mechs = c.execute('SELECT * FROM mechanics WHERE available=1').fetchall()
         c.close()
-        packages = [
-            {'id': 'tune', 'name': 'Quick Tune', 'price': 59, 'time': '2–3 hrs',
-             'checklist': ['Safety check', 'Brake adjustment', 'Gear indexing', 'Tyre pressure', 'Chain lube']},
-            {'id': 'standard', 'name': 'Full Service', 'price': 99, 'time': '4–5 hrs',
-             'checklist': ['All in Quick Tune', 'Wheel truing', 'Cable replacement', 'BB check', 'Full clean', 'Bearing inspection']},
-            {'id': 'overhaul', 'name': 'Premium Overhaul', 'price': 169, 'time': '6–8 hrs',
-             'checklist': ['All in Full Service', 'Complete drivetrain strip', 'Headset service', 'Hub service', 'Hydraulic bleed', 'Written condition report']},
-            {'id': 'ebike', 'name': 'E-Bike Specialist', 'price': 149, 'time': '5–6 hrs',
-             'checklist': ['Battery health test', 'Motor diagnostic', 'Firmware update', 'Sensor calibration', 'Full Service items']},
-        ]
-        return render_template('service.html', mechs=mechs, packages=packages)
+        return render_template('service.html', mechs=mechs, packages=SERVICE_PACKAGES)
 
     @app.route('/service/book', methods=['POST'])
     def book_service():
         if not session.get('uid'):
             return jsonify({'error': 'Login required'}), 401
-        d = request.json
-        prices = {'tune': 59, 'standard': 99, 'overhaul': 169, 'ebike': 149}
+        d = request.json or {}
+        bike_info = d.get('bike_info')
+        package = d.get('package')
+        mechanic_id = d.get('mechanic_id')
+        date = d.get('date')
+        if not bike_info or not package or mechanic_id is None or not date:
+            return jsonify({'error': 'bike_info, package, mechanic_id and date are required'}), 400
+        if package not in SERVICE_PRICES:
+            return jsonify({'error': 'Invalid package'}), 400
         c = db()
         c.execute('INSERT INTO service_bookings(user_id,bike_info,package,mechanic_id,scheduled_date,cost,notes) VALUES(?,?,?,?,?,?,?)',
-            (session['uid'], d['bike_info'], d['package'], d['mechanic_id'], d['date'], prices.get(d['package'], 99), d.get('notes', '')))
+            (session['uid'], bike_info, package, mechanic_id, date, SERVICE_PRICES[package], d.get('notes', '')))
         c.commit()
         bid = c.execute('SELECT last_insert_rowid()').fetchone()[0]
         c.close()

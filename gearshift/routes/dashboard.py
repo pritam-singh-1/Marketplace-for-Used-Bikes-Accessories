@@ -65,14 +65,17 @@ def register_dashboard_routes(app):
     def fav_toggle():
         if not session.get('uid'):
             return jsonify({'error': 'Login required'}), 401
-        d = request.json
+        d = request.json or {}
+        lid = d.get('lid')
+        if lid is None:
+            return jsonify({'error': 'lid is required'}), 400
         c = db()
-        ex = c.execute('SELECT id FROM favorites WHERE user_id=? AND listing_id=?', (session['uid'], d['lid'])).fetchone()
+        ex = c.execute('SELECT id FROM favorites WHERE user_id=? AND listing_id=?', (session['uid'], lid)).fetchone()
         if ex:
-            c.execute('DELETE FROM favorites WHERE user_id=? AND listing_id=?', (session['uid'], d['lid']))
+            c.execute('DELETE FROM favorites WHERE user_id=? AND listing_id=?', (session['uid'], lid))
             state = 'removed'
         else:
-            c.execute('INSERT INTO favorites(user_id,listing_id) VALUES(?,?)', (session['uid'], d['lid']))
+            c.execute('INSERT INTO favorites(user_id,listing_id) VALUES(?,?)', (session['uid'], lid))
             state = 'added'
         c.commit()
         c.close()

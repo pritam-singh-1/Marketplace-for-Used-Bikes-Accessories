@@ -49,10 +49,15 @@ def register_message_routes(app):
     def send_msg():
         if not session.get('uid'):
             return jsonify({'error': 'Unauthorized'}), 401
-        d = request.json
+        d = request.json or {}
+        receiver_id = d.get('receiver_id')
+        listing_id = d.get('listing_id')
+        content = d.get('content')
+        if receiver_id is None or listing_id is None or not content:
+            return jsonify({'error': 'receiver_id, listing_id and content are required'}), 400
         c = db()
         c.execute('INSERT INTO messages(sender_id,receiver_id,listing_id,content) VALUES(?,?,?,?)',
-            (session['uid'], d['receiver_id'], d['listing_id'], d['content']))
+            (session['uid'], receiver_id, listing_id, content))
         c.commit()
         m = c.execute('SELECT m.*,u.username FROM messages m JOIN users u ON m.sender_id=u.id WHERE m.sender_id=? ORDER BY m.created_at DESC LIMIT 1', (session['uid'],)).fetchone()
         c.close()

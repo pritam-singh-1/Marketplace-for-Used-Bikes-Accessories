@@ -47,7 +47,13 @@ def register_marketplace_routes(app):
             params.append(cond)
         sql += ' AND l.price BETWEEN ? AND ?'
         params += [minp, maxp]
-        order = {'newest': 'l.created_at DESC', 'price_low': 'l.price ASC', 'price_high': 'l.price DESC', 'popular': 'l.views DESC'}.get(sort, 'l.created_at DESC')
+        order_map = {
+            'newest': 'l.created_at DESC',
+            'price_low': 'l.price ASC',
+            'price_high': 'l.price DESC',
+            'popular': 'l.views DESC',
+        }
+        order = order_map.get(sort, order_map['newest'])
         sql += f' ORDER BY {order}'
         listings = c.execute(sql, params).fetchall()
         c.close()

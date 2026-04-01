@@ -136,7 +136,7 @@ def init_db():
         for u in users:
             try:
                 c.execute('INSERT INTO users(username,email,password,full_name,phone,location,bio,rating,reviews_count,is_verified) VALUES(?,?,?,?,?,?,?,?,?,?)', u)
-            except:
+            except sqlite3.IntegrityError:
                 pass
 
         u1 = c.execute('SELECT id FROM users WHERE username="chain_rex"').fetchone()
