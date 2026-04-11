@@ -3,6 +3,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import sqlite3, os, json, random, string
 from datetime import datetime
+import mysql.connector
+from mysql.connector import Error
+from werkzeug.security import generate_password_hash
 
 app = Flask(__name__)
 app.secret_key = 'gearshift_secret_key_2024'
