@@ -1,0 +1,46 @@
+{% extends "admin/base_admin.html" %}{% block admin_content %}
+<div class="adm-page-title">Users <span style="font-size:1rem;color:var(--concrete)">({{ users|length }})</span></div>
+<div class="adm-toolbar">
+  <form method="GET" style="display:flex;gap:.5rem">
+    <input type="text" name="q" value="{{ search }}" class="input" placeholder="Search username, email..." style="width:260px">
+    <button type="submit" class="btn btn-primary btn-sm">Search</button>
+    {% if search %}<a href="{{ url_for('admin_users') }}" class="btn btn-outline btn-sm">Clear</a>{% endif %}
+  </form>
+  <span class="adm-count">{{ users|length }} users</span>
+</div>
+<div class="adm-card">
+  <table class="adm-table">
+    <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Location</th><th>Rating</th><th>Verified</th><th>Banned</th><th>Joined</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for u in users %}
+      <tr class="{% if u.is_banned %}row-banned{% endif %}">
+        <td style="color:var(--concrete);font-size:.78rem">{{ u.id }}</td>
+        <td><a href="{{ url_for('admin_user_detail', uid_target=u.id) }}" style="color:var(--orange);font-weight:600">{{ u.username }}</a></td>
+        <td style="font-size:.82rem">{{ u.email }}</td>
+        <td style="font-size:.8rem;color:var(--concrete)">{{ u.location or '—' }}</td>
+        <td style="color:var(--amber)">★{{ "%.1f"|format(u.rating) }}</td>
+        <td><span class="badge badge-{{ 'green' if u.is_verified else 'grey' }}">{{ '✓ Yes' if u.is_verified else 'No' }}</span></td>
+        <td><span class="badge badge-{{ 'red' if u.is_banned else 'green' }}">{{ 'Banned' if u.is_banned else 'OK' }}</span></td>
+        <td style="font-size:.78rem;color:var(--concrete)">{{ u.joined.strftime('%Y-%m-%d') if u.joined and u.joined is not string else (u.joined or '')[:10] }}</td>
+        <td>
+          <div style="display:flex;gap:.3rem">
+            <a href="{{ url_for('admin_user_detail', uid_target=u.id) }}" class="btn-xs btn-xs-edit">View</a>
+            <a href="{{ url_for('admin_edit_user', uid_target=u.id) }}" class="btn-xs btn-xs-edit">Edit</a>
+            <button onclick="banUser({{ u.id }},this)" class="btn-xs {{ 'btn-xs-go' if u.is_banned else 'btn-xs-stop' }}">{{ 'Unban' if u.is_banned else 'Ban' }}</button>
+            <button onclick="verifyUser({{ u.id }},this)" class="btn-xs btn-xs-edit">{{ 'Unverify' if u.is_verified else 'Verify' }}</button>
+            <button onclick="deleteUser({{ u.id }})" class="btn-xs btn-xs-stop">Del</button>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% block scripts %}
+<script>
+function banUser(uid,btn){fetch(`/admin/user/${uid}/ban`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>r.json()).then(d=>{if(d.ok){location.reload();}else showToast(d.error,'error');});}
+function verifyUser(uid,btn){fetch(`/admin/user/${uid}/verify`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}
+function deleteUser(uid){if(!confirm('Permanently delete this user and all their listings?'))return;fetch(`/admin/user/${uid}/delete`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}
+</script>
+{% endblock %}
+{% endblock %}

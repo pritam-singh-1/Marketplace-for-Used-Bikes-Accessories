@@ -1,0 +1,35 @@
+{% extends "admin/base_admin.html" %}{% block admin_content %}
+<div class="adm-page-title">Service Bookings <span style="font-size:1rem;color:var(--concrete)">({{ bookings|length }})</span></div>
+<div class="adm-card">
+  <table class="adm-table">
+    <thead><tr><th>ID</th><th>User</th><th>Bike</th><th>Package</th><th>Mechanic</th><th>Date</th><th>Cost</th><th>Status</th><th>Update</th></tr></thead>
+    <tbody>
+      {% for b in bookings %}
+      <tr>
+        <td style="color:var(--concrete);font-size:.78rem">GS-SVC-{{ '%04d'%b.id }}</td>
+        <td style="color:var(--orange)">{{ b.username }}</td>
+        <td style="font-size:.8rem;color:var(--dust);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ b.bike_info }}</td>
+        <td style="font-size:.82rem;text-transform:capitalize">{{ b.package }}</td>
+        <td style="font-size:.8rem;color:var(--concrete)">{{ b.mname or 'TBD' }}</td>
+        <td style="font-size:.78rem;color:var(--concrete)">{{ b.scheduled_date }}</td>
+        <td style="color:var(--orange);font-weight:700">${{ b.cost }}</td>
+        <td><span class="badge badge-{{ 'green' if b.status=='complete' else 'amber' if b.status in ['confirmed','in_progress','quality_check'] else 'grey' }}">{{ b.status|replace('_',' ') }}</span></td>
+        <td>
+          <select onchange="setBookingStatus({{ b.id }},this.value)" class="sort-select" style="font-size:.75rem">
+            {% for s in ['pending','confirmed','in_progress','quality_check','complete'] %}
+            <option value="{{ s }}" {% if b.status==s %}selected{% endif %}>{{ s|replace('_',' ')|title }}</option>
+            {% endfor %}
+          </select>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not bookings %}<tr><td colspan="9" style="text-align:center;color:var(--concrete);padding:2.5rem">No bookings</td></tr>{% endif %}
+    </tbody>
+  </table>
+</div>
+{% block scripts %}
+<script>
+function setBookingStatus(bid,status){fetch(`/admin/booking/${bid}/status`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}).then(r=>r.json()).then(d=>{if(d.ok)showToast('Booking updated','success');});}
+</script>
+{% endblock %}
+{% endblock %}

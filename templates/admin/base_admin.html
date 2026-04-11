@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — GearShift{% endblock %}
+{% block content %}
+<div class="admin-wrap">
+  <aside class="admin-sidebar">
+    <div class="asb-logo">⚙ Admin Panel</div>
+    <nav class="asb-nav">
+      <a href="{{ url_for('admin_dashboard') }}" class="asb-link {% if request.endpoint=='admin_dashboard' %}active{% endif %}">Dashboard</a>
+      <a href="{{ url_for('admin_users') }}" class="asb-link {% if 'user' in request.endpoint %}active{% endif %}">Users</a>
+      <a href="{{ url_for('admin_listings') }}" class="asb-link {% if 'listing' in request.endpoint %}active{% endif %}">Listings</a>
+      <a href="{{ url_for('admin_orders') }}" class="asb-link {% if request.endpoint=='admin_orders' %}active{% endif %}">Orders</a>
+      <a href="{{ url_for('admin_bookings') }}" class="asb-link {% if request.endpoint=='admin_bookings' %}active{% endif %}">Bookings</a>
+      <a href="{{ url_for('admin_mechanics') }}" class="asb-link {% if 'mechanic' in request.endpoint %}active{% endif %}">Mechanics</a>
+      <a href="{{ url_for('admin_logs') }}" class="asb-link {% if request.endpoint=='admin_logs' %}active{% endif %}">Audit Logs</a>
+    </nav>
+    <div class="asb-footer">
+      <a href="{{ url_for('index') }}" class="asb-link">← Back to Site</a>
+      <a href="{{ url_for('logout') }}" class="asb-link" style="color:var(--red)">Sign Out</a>
+    </div>
+  </aside>
+  <main class="admin-main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat,msg in messages %}<div class="flash flash-{{ cat }}"><span>{{ msg }}</span><button onclick="this.parentElement.remove()">✕</button></div>{% endfor %}{% endif %}
+    {% endwith %}
+    {% block admin_content %}{% endblock %}
+  </main>
+</div>
+{% endblock %}

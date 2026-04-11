@@ -1,0 +1,22 @@
+{% extends "admin/base_admin.html" %}{% block admin_content %}
+<div class="adm-page-title">Edit User — {{ u.username }}</div>
+<div class="adm-card" style="max-width:600px">
+  <form method="POST">
+    <div class="field"><label>Full Name</label><input type="text" name="full_name" class="input" value="{{ u.full_name or '' }}"></div>
+    <div class="field"><label>Email</label><input type="email" name="email" class="input" value="{{ u.email }}"></div>
+    <div class="field-row">
+      <div class="field"><label>Phone</label><input type="text" name="phone" class="input" value="{{ u.phone or '' }}"></div>
+      <div class="field"><label>Location</label><input type="text" name="location" class="input" value="{{ u.location or '' }}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Rating (0–5)</label><input type="number" name="rating" class="input" value="{{ u.rating }}" min="0" max="5" step="0.1"></div>
+      <div class="field" style="justify-content:flex-end"><label class="check-label" style="height:100%;align-items:center"><input type="checkbox" name="is_verified" value="1" {% if u.is_verified %}checked{% endif %}><span>Verified</span></label></div>
+    </div>
+    <div class="field"><label>Bio</label><textarea name="bio" class="input" rows="3">{{ u.bio or '' }}</textarea></div>
+    <div style="display:flex;gap:.75rem;margin-top:1rem">
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <a href="{{ url_for('admin_user_detail', uid_target=u.id) }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

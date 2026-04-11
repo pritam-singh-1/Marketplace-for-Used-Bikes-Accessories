@@ -1,0 +1,40 @@
+{% extends "admin/base_admin.html" %}{% block admin_content %}
+<div class="adm-page-title">Mechanics</div>
+<div class="adm-card" style="margin-bottom:1.5rem">
+  <div class="adm-card-head">Add New Mechanic</div>
+  <form method="POST" action="{{ url_for('admin_add_mechanic') }}" style="display:grid;grid-template-columns:1fr 1fr 100px 80px;gap:.75rem;align-items:end;padding:.5rem 0">
+    <div class="field" style="margin:0"><label>Name</label><input type="text" name="name" required class="input" placeholder="Full name"></div>
+    <div class="field" style="margin:0"><label>Specialization</label><input type="text" name="specialization" required class="input" placeholder="Road & Triathlon"></div>
+    <div class="field" style="margin:0"><label>Exp (yrs)</label><input type="number" name="experience" class="input" placeholder="5" min="0"></div>
+    <button type="submit" class="btn btn-primary btn-sm" style="height:38px">Add</button>
+  </form>
+  <div class="field" style="margin-top:.5rem"><label>Bio</label><input type="text" name="bio" form="" id="bioField" class="input" placeholder="Short bio..."></div>
+</div>
+<div class="adm-card">
+  <table class="adm-table">
+    <thead><tr><th>ID</th><th>Name</th><th>Specialization</th><th>Experience</th><th>Rating</th><th>Available</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for m in mechs %}
+      <tr>
+        <td style="color:var(--concrete);font-size:.78rem">{{ m.id }}</td>
+        <td style="font-weight:600;color:var(--white)">{{ m.name }}</td>
+        <td style="font-size:.82rem;color:var(--dust)">{{ m.specialization }}</td>
+        <td style="font-size:.82rem;color:var(--concrete)">{{ m.experience }} yrs</td>
+        <td style="color:var(--amber)">★ {{ m.rating }}</td>
+        <td><span class="badge badge-{{ 'green' if m.available else 'grey' }}">{{ 'Available' if m.available else 'Unavailable' }}</span></td>
+        <td style="display:flex;gap:.4rem">
+          <button onclick="toggleMech({{ m.id }},this)" class="btn-xs btn-xs-{{ 'stop' if m.available else 'go' }}">{{ 'Set Unavailable' if m.available else 'Set Available' }}</button>
+          <button onclick="deleteMech({{ m.id }})" class="btn-xs btn-xs-stop">Delete</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% block scripts %}
+<script>
+function toggleMech(mid,btn){fetch(`/admin/mechanic/${mid}/toggle`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}
+function deleteMech(mid){if(!confirm('Delete this mechanic?'))return;fetch(`/admin/mechanic/${mid}/delete`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}
+</script>
+{% endblock %}
+{% endblock %}

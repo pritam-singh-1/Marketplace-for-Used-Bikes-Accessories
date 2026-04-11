@@ -1,0 +1,70 @@
+{% extends "admin/base_admin.html" %}
+{% block admin_content %}
+<div class="adm-page-title">Dashboard</div>
+
+<div class="adm-stats-grid">
+  <div class="adm-stat"><div class="adm-stat-n">{{ stats.users }}</div><div class="adm-stat-l">Total Users</div></div>
+  <div class="adm-stat"><div class="adm-stat-n">{{ stats.listings }}</div><div class="adm-stat-l">Active Listings</div></div>
+  <div class="adm-stat"><div class="adm-stat-n">{{ stats.sold }}</div><div class="adm-stat-l">Bikes Sold</div></div>
+  <div class="adm-stat"><div class="adm-stat-n">{{ stats.orders }}</div><div class="adm-stat-l">Total Orders</div></div>
+  <div class="adm-stat"><div class="adm-stat-n">{{ stats.bookings }}</div><div class="adm-stat-l">Bookings</div></div>
+  <div class="adm-stat adm-stat-warn"><div class="adm-stat-n">{{ stats.banned }}</div><div class="adm-stat-l">Banned Users</div></div>
+  <div class="adm-stat adm-stat-success"><div class="adm-stat-n">${{ "%.0f"|format(stats.revenue) }}</div><div class="adm-stat-l">Total Revenue</div></div>
+  <div class="adm-stat"><div class="adm-stat-n">{{ stats.unread_msgs }}</div><div class="adm-stat-l">Unread Messages</div></div>
+</div>
+
+<div class="adm-grid-2">
+  <div class="adm-card">
+    <div class="adm-card-head">Recent Users <a href="{{ url_for('admin_users') }}" class="adm-head-link">View All →</a></div>
+    <table class="adm-table">
+      <thead><tr><th>Username</th><th>Email</th><th>Verified</th><th>Banned</th><th>Joined</th></tr></thead>
+      <tbody>
+        {% for u in recent_users %}
+        <tr>
+          <td><a href="{{ url_for('admin_user_detail', uid_target=u.id) if u.id is defined else '#' }}" style="color:var(--orange)">{{ u.username }}</a></td>
+          <td style="font-size:.8rem;color:var(--concrete)">{{ u.email }}</td>
+          <td>{% if u.is_verified %}<span class="badge badge-green">✓</span>{% else %}<span class="badge badge-grey">—</span>{% endif %}</td>
+          <td>{% if u.is_banned %}<span class="badge badge-red">Banned</span>{% else %}<span class="badge badge-green">OK</span>{% endif %}</td>
+          <td style="font-size:.78rem;color:var(--concrete)">{{ u.joined.strftime('%Y-%m-%d') if u.joined and u.joined is not string else (u.joined or '')[:10] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="adm-card">
+    <div class="adm-card-head">Recent Listings <a href="{{ url_for('admin_listings') }}" class="adm-head-link">View All →</a></div>
+    <table class="adm-table">
+      <thead><tr><th>Title</th><th>Price</th><th>Seller</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for l in recent_listings %}
+        <tr>
+          <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.title }}</td>
+          <td style="color:var(--orange);font-weight:700">${{ "%.0f"|format(l.price) }}</td>
+          <td style="color:var(--concrete);font-size:.82rem">{{ l.username }}</td>
+          <td><span class="badge badge-{{ 'green' if l.status=='active' else 'grey' if l.status=='sold' else 'red' }}">{{ l.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="adm-card" style="margin-top:1.25rem">
+  <div class="adm-card-head">Recent Admin Activity <a href="{{ url_for('admin_logs') }}" class="adm-head-link">Full Log →</a></div>
+  <table class="adm-table">
+    <thead><tr><th>Admin</th><th>Action</th><th>Target</th><th>Detail</th><th>Time</th></tr></thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td style="color:var(--orange)">{{ log.aname }}</td>
+        <td><span class="badge badge-blue">{{ log.action }}</span></td>
+        <td style="color:var(--concrete);font-size:.8rem">{{ log.target_type }} #{{ log.target_id }}</td>
+        <td style="font-size:.8rem;color:var(--dust)">{{ log.detail[:50] if log.detail else '—' }}</td>
+        <td style="font-size:.75rem;color:var(--concrete)">{{ log.created_at.strftime('%m-%d %H:%M') if log.created_at and log.created_at is not string else (log.created_at or '')[:16] }}</td>
+      </tr>
+      {% endfor %}
+      {% if not logs %}<tr><td colspan="5" style="text-align:center;color:var(--concrete);padding:2rem">No activity yet</td></tr>{% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

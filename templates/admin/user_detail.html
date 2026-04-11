@@ -1,0 +1,76 @@
+{% extends "admin/base_admin.html" %}{% block admin_content %}
+<div class="adm-page-title">User — {{ u.username }}</div>
+<div class="adm-grid-2" style="margin-bottom:1.25rem">
+  <div class="adm-card">
+    <div class="adm-card-head">Profile</div>
+    <div class="adm-profile-row"><span>Full Name</span><strong>{{ u.full_name or '—' }}</strong></div>
+    <div class="adm-profile-row"><span>Email</span><strong>{{ u.email }}</strong></div>
+    <div class="adm-profile-row"><span>Phone</span><strong>{{ u.phone or '—' }}</strong></div>
+    <div class="adm-profile-row"><span>Location</span><strong>{{ u.location or '—' }}</strong></div>
+    <div class="adm-profile-row"><span>Rating</span><strong style="color:var(--amber)">★ {{ "%.1f"|format(u.rating) }}</strong></div>
+    <div class="adm-profile-row"><span>Verified</span><strong><span class="badge badge-{{ 'green' if u.is_verified else 'grey' }}">{{ 'Yes' if u.is_verified else 'No' }}</span></strong></div>
+    <div class="adm-profile-row"><span>Banned</span><strong><span class="badge badge-{{ 'red' if u.is_banned else 'green' }}">{{ 'Yes' if u.is_banned else 'No' }}</span></strong></div>
+    <div class="adm-profile-row"><span>Joined</span><strong>{{ u.joined.strftime('%Y-%m-%d') if u.joined and u.joined is not string else (u.joined or '')[:10] }}</strong></div>
+    {% if u.bio %}<div class="adm-profile-row"><span>Bio</span><span style="font-size:.82rem;color:var(--dust)">{{ u.bio }}</span></div>{% endif %}
+  </div>
+  <div class="adm-card">
+    <div class="adm-card-head">Actions</div>
+    <div style="display:flex;flex-direction:column;gap:.6rem;padding:.5rem 0">
+      <a href="{{ url_for('admin_edit_user', uid_target=u.id) }}" class="btn btn-outline btn-sm">Edit Profile</a>
+      <button onclick="banUser({{ u.id }})" class="btn btn-{{ 'outline' if u.is_banned else 'danger' }} btn-sm">{{ 'Unban User' if u.is_banned else 'Ban User' }}</button>
+      <button onclick="verifyUser({{ u.id }})" class="btn btn-outline btn-sm">{{ 'Remove Verification' if u.is_verified else 'Verify User' }}</button>
+      <a href="{{ url_for('profile', username=u.username) }}" class="btn btn-outline btn-sm" target="_blank">View Public Profile</a>
+      <button onclick="deleteUser({{ u.id }})" class="btn btn-danger btn-sm">Delete User Permanently</button>
+    </div>
+  </div>
+</div>
+<div class="adm-card" style="margin-bottom:1.25rem">
+  <div class="adm-card-head">Listings ({{ listings|length }})</div>
+  <table class="adm-table">
+    <thead><tr><th>Title</th><th>Price</th><th>Category</th><th>Status</th><th>Views</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for l in listings %}
+      <tr>
+        <td><a href="{{ url_for('listing', lid=l.id) }}" style="color:var(--orange)">{{ l.title[:40] }}</a></td>
+        <td style="color:var(--orange);font-weight:700">${{ "%.0f"|format(l.price) }}</td>
+        <td style="font-size:.8rem;color:var(--concrete)">{{ l.category }}</td>
+        <td><span class="badge badge-{{ 'green' if l.status=='active' else 'grey' if l.status=='sold' else 'red' }}">{{ l.status }}</span></td>
+        <td style="color:var(--concrete)">{{ l.views }}</td>
+        <td>
+          <select onchange="setListingStatus({{ l.id }},this.value)" class="sort-select" style="font-size:.75rem">
+            <option value="">Change status</option>
+            {% for s in ['active','sold','deleted','suspended'] %}<option value="{{ s }}" {% if l.status==s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+          </select>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="adm-card">
+  <div class="adm-card-head">Orders ({{ orders|length }})</div>
+  <table class="adm-table">
+    <thead><tr><th>Listing</th><th>Amount</th><th>Method</th><th>TX ID</th><th>Date</th></tr></thead>
+    <tbody>
+      {% for o in orders %}
+      <tr>
+        <td style="font-size:.82rem">{{ o.ltitle[:35] }}</td>
+        <td style="color:var(--orange);font-weight:700">${{ "%.2f"|format(o.amount) }}</td>
+        <td style="color:var(--concrete)">{{ o.method or '—' }}</td>
+        <td style="font-family:var(--mono);font-size:.75rem;color:var(--concrete)">{{ o.tx_id or '—' }}</td>
+        <td style="font-size:.78rem;color:var(--concrete)">{{ o.created_at.strftime('%Y-%m-%d') if o.created_at and o.created_at is not string else (o.created_at or '')[:10] }}</td>
+      </tr>
+      {% endfor %}
+      {% if not orders %}<tr><td colspan="5" style="text-align:center;color:var(--concrete);padding:1.5rem">No orders</td></tr>{% endif %}
+    </tbody>
+  </table>
+</div>
+{% block scripts %}
+<script>
+function banUser(uid){fetch(`/admin/user/${uid}/ban`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}
+function verifyUser(uid){fetch(`/admin/user/${uid}/verify`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}
+function deleteUser(uid){if(!confirm('Delete user permanently?'))return;fetch(`/admin/user/${uid}/delete`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>r.json()).then(d=>{if(d.ok)window.location='/admin/users';});}
+function setListingStatus(lid,status){if(!status)return;fetch(`/admin/listing/${lid}/status`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}
+</script>
+{% endblock %}
+{% endblock %}

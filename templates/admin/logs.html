@@ -1,0 +1,20 @@
+{% extends "admin/base_admin.html" %}{% block admin_content %}
+<div class="adm-page-title">Audit Logs <span style="font-size:1rem;color:var(--concrete)">(last 200)</span></div>
+<div class="adm-card">
+  <table class="adm-table">
+    <thead><tr><th>Time</th><th>Admin</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td style="font-size:.75rem;color:var(--concrete);font-family:var(--mono);white-space:nowrap">{{ log.created_at.strftime('%Y-%m-%d %H:%M') if log.created_at and log.created_at is not string else (log.created_at or '')[:16] }}</td>
+        <td style="color:var(--orange);font-weight:600">{{ log.aname }}</td>
+        <td><span class="badge badge-blue">{{ log.action }}</span></td>
+        <td style="font-size:.8rem;color:var(--concrete)">{{ log.target_type }} {% if log.target_id %}#{{ log.target_id }}{% endif %}</td>
+        <td style="font-size:.8rem;color:var(--dust)">{{ log.detail or '—' }}</td>
+      </tr>
+      {% endfor %}
+      {% if not logs %}<tr><td colspan="5" style="text-align:center;color:var(--concrete);padding:2.5rem">No admin actions logged yet</td></tr>{% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

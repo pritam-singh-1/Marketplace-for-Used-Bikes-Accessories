@@ -1,0 +1,23 @@
+{% extends "admin/base_admin.html" %}{% block admin_content %}
+<div class="adm-page-title">Orders <span style="font-size:1rem;color:var(--concrete)">({{ orders|length }})</span></div>
+<div class="adm-card">
+  <table class="adm-table">
+    <thead><tr><th>ID</th><th>Listing</th><th>Buyer</th><th>Seller</th><th>Amount</th><th>Method</th><th>TX ID</th><th>Date</th></tr></thead>
+    <tbody>
+      {% for o in orders %}
+      <tr>
+        <td style="color:var(--concrete);font-size:.78rem">{{ o.id }}</td>
+        <td style="font-size:.82rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.ltitle }}</td>
+        <td style="color:var(--orange)">{{ o.buyer_name }}</td>
+        <td style="color:var(--concrete)">{{ o.seller_name }}</td>
+        <td style="color:var(--orange);font-weight:700">${{ "%.2f"|format(o.amount) }}</td>
+        <td style="font-size:.8rem;color:var(--concrete)">{{ o.method or '—' }}</td>
+        <td style="font-family:var(--mono);font-size:.72rem;color:var(--concrete)">{{ o.tx_id or '—' }}</td>
+        <td style="font-size:.75rem;color:var(--concrete)">{{ o.created_at.strftime('%Y-%m-%d') if o.created_at and o.created_at is not string else (o.created_at or '')[:10] }}</td>
+      </tr>
+      {% endfor %}
+      {% if not orders %}<tr><td colspan="8" style="text-align:center;color:var(--concrete);padding:2.5rem">No orders yet</td></tr>{% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

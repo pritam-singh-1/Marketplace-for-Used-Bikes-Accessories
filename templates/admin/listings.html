@@ -1,0 +1,43 @@
+{% extends "admin/base_admin.html" %}{% block admin_content %}
+<div class="adm-page-title">Listings <span style="font-size:1rem;color:var(--concrete)">({{ listings|length }})</span></div>
+<div class="adm-toolbar">
+  <form method="GET" style="display:flex;gap:.5rem;flex-wrap:wrap">
+    <input type="text" name="q" value="{{ search }}" class="input" placeholder="Search title, brand..." style="width:220px">
+    <select name="status" class="sort-select">
+      <option value="">All statuses</option>
+      {% for s in ['active','sold','deleted','suspended'] %}<option value="{{ s }}" {% if status==s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+    <a href="{{ url_for('admin_listings') }}" class="btn btn-outline btn-sm">Clear</a>
+  </form>
+</div>
+<div class="adm-card">
+  <table class="adm-table">
+    <thead><tr><th>ID</th><th>Title</th><th>Price</th><th>Seller</th><th>Category</th><th>Status</th><th>Views</th><th>Date</th><th>Change Status</th></tr></thead>
+    <tbody>
+      {% for l in listings %}
+      <tr>
+        <td style="color:var(--concrete);font-size:.78rem">{{ l.id }}</td>
+        <td><a href="{{ url_for('listing', lid=l.id) }}" style="color:var(--orange)" target="_blank">{{ l.title[:35] }}</a></td>
+        <td style="color:var(--orange);font-weight:700">${{ "%.0f"|format(l.price) }}</td>
+        <td style="font-size:.82rem">{{ l.username }}</td>
+        <td style="font-size:.8rem;color:var(--concrete)">{{ l.category }}</td>
+        <td><span class="badge badge-{{ 'green' if l.status=='active' else 'grey' if l.status=='sold' else 'red' }}">{{ l.status }}</span></td>
+        <td style="color:var(--concrete)">{{ l.views }}</td>
+        <td style="font-size:.75rem;color:var(--concrete)">{{ l.created_at.strftime('%Y-%m-%d') if l.created_at and l.created_at is not string else (l.created_at or '')[:10] }}</td>
+        <td>
+          <select onchange="setStatus({{ l.id }},this.value)" class="sort-select" style="font-size:.75rem">
+            {% for s in ['active','sold','deleted','suspended'] %}<option value="{{ s }}" {% if l.status==s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+          </select>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% block scripts %}
+<script>
+function setStatus(lid,status){fetch(`/admin/listing/${lid}/status`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}).then(r=>r.json()).then(d=>{if(d.ok)showToast('Status updated','success');else showToast('Failed','error');});}
+</script>
+{% endblock %}
+{% endblock %}
